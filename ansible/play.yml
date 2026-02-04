@@ -1,2 +1,26 @@
---
- -name:test
+---
+- hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ temp_dir }}"
+        - "{{ deploy_dir }}"
+    
+    - name: Download file from Nexus
+      shell: |
+        curl -u {{ nexus_user }}:{{ nexus_password }} \
+        -o {{ temp_dir }}/{{ app_file }} \
+        {{ nexus_url }}/repository/{{ nexus_repo }}/{{ app_file }}
+    
+    - name: Extract to Deploy directory
+      shell: |
+        cd {{ deploy_dir }}
+        tar -xzf {{ temp_dir }}/{{ app_file }}
+    
+    - name: Cleanup temp directory
+      shell: rm -rf {{ temp_dir }}/*
